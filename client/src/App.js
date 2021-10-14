@@ -2,12 +2,20 @@ import './App.css';
 import React, {useEffect, useState} from 'react';
 import Web3 from 'web3';
 import TrafficEvents from './contracts/TrafficEvents.json';
+import ReactMapGL, {GeolocateControl} from 'react-map-gl';
 
 function App() {
   const [address, setAddress] = useState('');
   const [contract, setContract] = useState(null);
   const [eventCount, setEventCount] = useState(0);
   const [events, setEvents] = useState(null);
+
+  const [viewport, setViewport] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    latitude: 44.4356,
+    longitude: 26.1016
+  });
 
   async function loadWeb3() {
     try {
@@ -38,21 +46,25 @@ function App() {
     }
   }
 
-  useEffect(() => loadWeb3(), []);
+  useEffect(() => {
+    loadWeb3();
+    window.addEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
+    return () => window.removeEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
+  }, []);
 
   return (
-    <div className="App">
-      <Navbar address={address}></Navbar>
-    </div>
-  );
-}
-
-function Navbar({ address }) {
-  return (
-    <nav className="navbar navbar-dark bg-dark py-0 px-3">
-      <div className="navbar-brand">Traffic Events</div>
-      <span style={{color: 'white'}}>{address}</span>
-    </nav>
+    <ReactMapGL
+    {...viewport}
+    mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
+    onViewportChange={(viewport) => setViewport(viewport)}
+    >
+      <GeolocateControl
+      style={{right: 10, top: 10}}
+      positionOptions={{enableHighAccuracy: true}}
+      trackUserLocation={true}
+      mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
+      auto/>
+    </ReactMapGL>
   );
 }
 
