@@ -2,20 +2,14 @@ import './App.css';
 import React, {useEffect, useState} from 'react';
 import Web3 from 'web3';
 import TrafficEvents from './contracts/TrafficEvents.json';
-import ReactMapGL, {GeolocateControl} from 'react-map-gl';
+import ReactMapGL, {GeolocateControl, Marker} from 'react-map-gl';
+import { BsCircleFill } from "react-icons/bs";
 
 function App() {
   const [address, setAddress] = useState('');
   const [contract, setContract] = useState(null);
   const [eventCount, setEventCount] = useState(0);
   const [events, setEvents] = useState(null);
-
-  const [viewport, setViewport] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-    latitude: 44.4356,
-    longitude: 26.1016
-  });
 
   async function loadWeb3() {
     try {
@@ -48,6 +42,31 @@ function App() {
 
   useEffect(() => {
     loadWeb3();
+  }, []);
+
+  return (
+    <Map data={[{name: 'a', longitude: 26.1016, latitude: 44.4356}]}></Map>
+  );
+}
+
+function Map(props) {
+  const [viewport, setViewport] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    latitude: 44.4356,
+    longitude: 26.1016
+  });
+
+  const markers = React.useMemo(() => props.data.map(
+    marker => (
+      <Marker key={marker.name} longitude={marker.longitude} latitude={marker.latitude} >
+        <BsCircleFill style={{color: 'red'}}/>
+        {/* https://visgl.github.io/react-map-gl/docs/api-reference/popup */}
+      </Marker>
+    )
+  ), [props.data]);
+
+  useEffect(() => {
     window.addEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
     return () => window.removeEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
   }, []);
@@ -62,8 +81,8 @@ function App() {
       style={{right: 10, top: 10}}
       positionOptions={{enableHighAccuracy: true}}
       trackUserLocation={true}
-      mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
       auto/>
+      {markers}
     </ReactMapGL>
   );
 }
