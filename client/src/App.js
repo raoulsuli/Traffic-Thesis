@@ -2,13 +2,11 @@ import './App.css';
 import React, {useEffect, useState} from 'react';
 import Web3 from 'web3';
 import TrafficEvents from './contracts/TrafficEvents.json';
-import ReactMapGL, {GeolocateControl, Marker} from 'react-map-gl';
-import { BsCircleFill } from "react-icons/bs";
+import Map from './components/map';
 
 function App() {
   const [address, setAddress] = useState('');
   const [contract, setContract] = useState(null);
-  const [eventCount, setEventCount] = useState(0);
   const [events, setEvents] = useState(null);
 
   async function loadWeb3() {
@@ -24,13 +22,20 @@ function App() {
       const events = [];
 
       for (let i = 0; i < eventCount; i++) {
-        const ev = await contract.methods.getEvent(i);
-        events.push(ev);
+        const ev = await contract.methods.getEvent(i).call();
+        events.push({
+          id: ev.id,
+          date: ev.date,
+          eventType: ev.eventType,
+          latitude: parseFloat(ev.latitude),
+          longitude: parseFloat(ev.longitude),
+          owner: ev.owner,
+          speed: ev.speed
+        });
       }
 
       setAddress(accounts[0]);
       setContract(contract);
-      setEventCount(eventCount);
       setEvents(events);
     } catch (error) {
       alert(
@@ -45,45 +50,9 @@ function App() {
   }, []);
 
   return (
-    <Map data={[{name: 'a', longitude: 26.1016, latitude: 44.4356}]}></Map>
-  );
-}
-
-function Map(props) {
-  const [viewport, setViewport] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-    latitude: 44.4356,
-    longitude: 26.1016
-  });
-
-  const markers = React.useMemo(() => props.data.map(
-    marker => (
-      <Marker key={marker.name} longitude={marker.longitude} latitude={marker.latitude} >
-        <BsCircleFill style={{color: 'red'}}/>
-        {/* https://visgl.github.io/react-map-gl/docs/api-reference/popup */}
-      </Marker>
-    )
-  ), [props.data]);
-
-  useEffect(() => {
-    window.addEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
-    return () => window.removeEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
-  }, []);
-
-  return (
-    <ReactMapGL
-    {...viewport}
-    mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
-    onViewportChange={(viewport) => setViewport(viewport)}
-    >
-      <GeolocateControl
-      style={{right: 10, top: 10}}
-      positionOptions={{enableHighAccuracy: true}}
-      trackUserLocation={true}
-      auto/>
-      {markers}
-    </ReactMapGL>
+    <>
+    {events && <Map events={events} account={address} contract={contract}/>}
+    </>
   );
 }
 
