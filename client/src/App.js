@@ -51,7 +51,7 @@ function App() {
 
   return (
     <>
-    {events && <Map events={events} account={address} contract={contract}/>}
+    {events && <Map events={events} account={address} contract={contract} refreshEvents={loadWeb3}/>}
     </>
   );
 }
