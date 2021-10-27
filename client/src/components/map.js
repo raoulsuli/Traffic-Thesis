@@ -3,6 +3,7 @@ import ReactMapGL, { GeolocateControl, Popup } from 'react-map-gl';
 import EventInfo from './event-info';
 import Events from './events';
 import EventModal from './event-modal';
+import utils from '../constants/utils';
 
 export default function Map(props) {
   const [viewport, setViewport] = useState({
@@ -18,13 +19,28 @@ export default function Map(props) {
     return () => window.removeEventListener('resize', () => setViewport({width: window.innerWidth, height: window.innerHeight}));
   }, []);
 
-  function updatePosition(position) {
+  async function updatePosition(position) {
     setPosition(position);
+    await fetch(`${utils.API_PATH}/location`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({address: props.account, longitude: position.longitude, latitude: position.latitude})
+    });
   }
 
   async function createEvent(eventType) {
-    await props.contract.methods.createEvent(eventType, getCurrentDate(), position.longitude.toString(), position.latitude.toString(), position.speed * 3.6).send({from: props.account});
-    await props.refreshEvents();
+    await fetch(`${utils.API_PATH}/request`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        address: props.account,
+        longitude: position.longitude,
+        latitude: position.latitude,
+        type: eventType,
+        date: new Date(),
+        speed: position.speed * 3.6
+      })
+    });
   }
   
   return (
@@ -60,15 +76,4 @@ export default function Map(props) {
     </ReactMapGL>
   </>
   );
-}
-
-function getCurrentDate() {
-  const today = new Date();
-  const formatDate = (item) => {
-      return (item <= 9) ? `0${item}` : item;
-  }
-
-  return formatDate(today.getDay()) + '/' + formatDate(today.getMonth()) + '/' +
-  today.getFullYear() + ', ' + formatDate(today.getHours()) + ':' +
-  formatDate(today.getMinutes()) + ':' + formatDate(today.getSeconds());
 }

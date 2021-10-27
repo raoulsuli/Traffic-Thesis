@@ -3,6 +3,7 @@ import React, {useEffect, useState} from 'react';
 import Web3 from 'web3';
 import TrafficEvents from './contracts/TrafficEvents.json';
 import Map from './components/map';
+import utils from './constants/utils';
 
 function App() {
   const [address, setAddress] = useState('');
@@ -45,13 +46,40 @@ function App() {
     }
   }
 
+  async function updateBlockchain(request) {
+    if (contract) { // verify met conditions for addition
+      // await contract.methods.createEvent(request.type, utils.getCurrentDate(), request.longitude.toString(), request.latitude.toString(), request.speed).send({from: address});
+      // loadWeb3();
+    }
+    await fetch(`${utils.API_PATH}/request`, {
+      method: 'DELETE',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: request.id})
+    });
+  }
+
+  async function getRequests() {
+    // show toasts for queries
+    await fetch(`${utils.API_PATH}/request`)
+    .then(data => data.json())
+    .then(data => {
+      data.forEach(async d => {
+        let date = new Date(d.date);
+        date.setMinutes(utils.REQUESTS_ADD_TIME);
+        if (new Date() >= date) updateBlockchain(d);
+      });
+    });
+  }
+
   useEffect(() => {
     loadWeb3();
-  }, []);
+    const interval = setInterval(getRequests, utils.REQUESTS_REFRESH_TIME);
+    return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
-    {events && <Map events={events} account={address} contract={contract} refreshEvents={loadWeb3}/>}
+    {events && <Map events={events} account={address} contract={contract}/>}
     </>
   );
 }

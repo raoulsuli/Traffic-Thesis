@@ -8,7 +8,7 @@ const schema = mongoose.Schema({
     date: Date,
     speed: Number,
     reputation: Number,
-    answered: [String]
+    answered: [{address: String, answer: Boolean}]
 });
 
 module.exports = mongoose.model("Request", schema);
