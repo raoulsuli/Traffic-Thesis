@@ -59,7 +59,7 @@ function App() {
   }
 
   async function getRequests() {
-    // show toasts for queries
+    // add temporary markers to events
     await fetch(`${utils.API_PATH}/request`)
     .then(data => data.json())
     .then(data => {
