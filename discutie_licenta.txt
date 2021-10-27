@@ -1,0 +1,16 @@
+viitor ->
+	verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain
+	blockchain live si metamask / metamask mobile
+	adresa blockchain cu gas pe live
+
+optional -> (drum optim A->B, viteza medie, aplicatie mobile
+login - pagina, token middleware, token localstorage,
+intrebat match user cu adresa, 
+privacy necesar?)
+
+next-step: query catre participanti, adaugare la sfarsit, tinut cont de reputatie
+update reputatie, update web3 daca e adaugat ceva in blockchain
+
+floating modal cu accept refuse SAAAU adaug pe harta dar nu in blockchain pentru 5 minute
+la sfarsitul celor 5 min, daca are reputatie mare si putine refuzuri se baga,
+daca are reputatie mica sau medie si are multe refuzuri bafta
