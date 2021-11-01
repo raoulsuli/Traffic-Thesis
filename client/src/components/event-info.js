@@ -6,7 +6,7 @@ function EventInfo(props) {
     const [hidden, setHidden] = useState(false);
 
     function handleClick(answer) {
-        props.onClick(answer);
+        props.onClick({answer: answer, id: props.event._id});
         setHidden(true);
     }
 

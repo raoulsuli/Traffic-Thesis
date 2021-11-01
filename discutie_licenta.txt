@@ -1,5 +1,6 @@
+verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain
+
 viitor ->
-	verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain
 	blockchain live si metamask / metamask mobile
 	adresa blockchain cu gas pe live
 
@@ -8,8 +9,5 @@ login - pagina, token middleware, token localstorage,
 intrebat match user cu adresa, 
 privacy necesar?)
 
-dupa cele 5 minute: verific reputatie si answered. Daca e acceptat, adaug in blockchain, il fac accepted si updatez reputatie.
-Daca nu e acceptat, nu adaug, il fac refused si updatez reputatie.
-
-Reputatie mare cu >=raspunsuri pozitive accept
-Reputatie mica cu <raspunsuri pozitive refuz
+cons -> 
+	trebuie sa accepte cineva prin metamask

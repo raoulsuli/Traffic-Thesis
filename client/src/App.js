@@ -10,6 +10,7 @@ function App() {
   const [contract, setContract] = useState(null);
   const [events, setEvents] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [queryGiven, setQueryGiven] = useState([]);
 
   async function loadWeb3() {
     try {
@@ -48,15 +49,42 @@ function App() {
   }
 
   async function updateBlockchain(request) {
-    if (contract) { // verify met conditions for addition
-      // await contract.methods.createEvent(request.type, utils.getCurrentDate(), request.longitude.toString(), request.latitude.toString(), request.speed).send({from: address});
-      // loadWeb3();
+    if (contract) {
+      const accepts = request.answered.filter(r => r.answer === true);
+      const refuses = request.answered.filter(r => r.answer === false);
+      if (accepts.length > refuses.length) addToBlockchain(request);
+      else if (accepts.length === refuses.length && request.reputation >= 0.5) addToBlockchain(request);
+      else updateDatabase(request, -1);
     }
-    // await fetch(`${utils.API_PATH}/request`, {
-    //   method: 'DELETE',
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: JSON.stringify({id: request.id})
-    // });
+  }
+
+  async function addToBlockchain(request) {
+    if (!queryGiven.includes(request._id)) {
+      await contract.methods.createEvent(request.eventType, request.date, request.longitude.toString(), request.latitude.toString(), request.speed).send({from: request.address});
+      loadWeb3();
+      updateDatabase(request, 1);
+    }
+
+    setQueryGiven(query => {
+      if (!query.includes(request._id)) query.push(request._id);
+    });
+  }
+
+  async function updateDatabase(request, sign) {
+    await fetch(`${utils.API_PATH}/location?address=${request.address.toString()}`)
+    .then(data => data.json())
+    .then(async data => {
+      await fetch(`${utils.API_PATH}/location`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({address: request.address, reputation: Math.min(data.reputation + 0.01 * sign, 100)})
+      });
+    });
+    await fetch(`${utils.API_PATH}/request`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: request._id, status: sign === 1 ? utils.ACCEPTED : utils.REFUSED})
+    });
   }
 
   async function getRequests() {
@@ -67,7 +95,7 @@ function App() {
       data.forEach(async d => {
         let date = new Date(d.date);
         date.setMinutes(utils.REQUESTS_ADD_TIME);
-        if (new Date() >= date) updateBlockchain(d);
+        if (new Date() >= date && d.status === utils.PENDING) updateBlockchain(d);
       });
     });
   }

@@ -44,13 +44,14 @@ export default function Map(props) {
   }
 
   async function updateRequest(answer) {
-    await fetch(`${utils.API_PATH}/request`, {
+    await fetch(`${utils.API_PATH}/request`, { //TODO
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
+        id: answer.id,
         answered: {
           address: props.account,
-          answer: answer
+          answer: answer.answer
         }
       })
     });

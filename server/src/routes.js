@@ -5,7 +5,7 @@ const Request = require('./models/Request');
 const utils = require('./constants/utils');
 
 router.get('/location', async (req, res) => {
-    const location = await Location.findOne({ address: req.body.address });
+    const location = await Location.findOne({ address: req.query.address });
     res.status(200).send(location || {});
 });
 
@@ -47,11 +47,18 @@ router.get('/request', async (req, res) => {
 router.post('/request', async (req, res) => {
     const location = await Location.findOne({ address: req.body.address });
     if (location) {
-        const requests = await Request.find({ eventType: req.body.type });
+        const typeRequests = await Request.find({ eventType: req.body.type });
+        const requests = await Request.find();
         let found = false;
-        if (requests) {
-            requests.forEach(r => {
+        if (typeRequests) {
+            typeRequests.forEach(r => {
                 if (utils.getDistance(r.latitude, r.longitude, req.body.latitude, req.body.longitude) < 0.5) {
+                    found = true;
+                }
+            });
+
+            requests.forEach(r => {
+                if (utils.getDistance(r.latitude, r.longitude, req.body.latitude, req.body.longitude) < 0.1) {
                     found = true;
                 }
             });
