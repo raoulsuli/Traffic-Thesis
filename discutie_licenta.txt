@@ -1,4 +1,4 @@
-verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain
+verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain ????
 
 viitor ->
 	blockchain live si metamask / metamask mobile
@@ -8,6 +8,3 @@ optional -> (drum optim A->B, viteza medie, aplicatie mobile
 login - pagina, token middleware, token localstorage,
 intrebat match user cu adresa, 
 privacy necesar?)
-
-cons -> 
-	trebuie sa accepte cineva prin metamask

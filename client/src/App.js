@@ -95,7 +95,7 @@ function App() {
       data.forEach(async d => {
         let date = new Date(d.date);
         date.setMinutes(utils.REQUESTS_ADD_TIME);
-        if (new Date() >= date && d.status === utils.PENDING) updateBlockchain(d);
+        if (new Date() >= date && d.status === utils.PENDING && d.address === address) updateBlockchain(d);
       });
     });
   }
