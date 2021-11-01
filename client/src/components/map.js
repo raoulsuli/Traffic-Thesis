@@ -42,6 +42,19 @@ export default function Map(props) {
       })
     });
   }
+
+  async function updateRequest(answer) {
+    await fetch(`${utils.API_PATH}/request`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        answered: {
+          address: props.account,
+          answer: answer
+        }
+      })
+    });
+  }
   
   return (
   <>
@@ -57,7 +70,7 @@ export default function Map(props) {
       onGeolocate={(pos) => updatePosition(pos.coords)}
       auto/>
 
-      <Events events={props.events} onClick={setEventInfo}/>
+      <Events events={props.events} requests={props.requests} onClick={setEventInfo}/>
       
       {eventInfo && (
         <Popup
@@ -68,7 +81,7 @@ export default function Map(props) {
           closeButton={false}
           onClose={setEventInfo}
         >
-          <EventInfo event={eventInfo} />
+          <EventInfo event={eventInfo} position={position} account={props.account} onClick={updateRequest}/>
         </Popup>
       )}
 

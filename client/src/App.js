@@ -9,6 +9,7 @@ function App() {
   const [address, setAddress] = useState('');
   const [contract, setContract] = useState(null);
   const [events, setEvents] = useState(null);
+  const [requests, setRequests] = useState([]);
 
   async function loadWeb3() {
     try {
@@ -51,18 +52,18 @@ function App() {
       // await contract.methods.createEvent(request.type, utils.getCurrentDate(), request.longitude.toString(), request.latitude.toString(), request.speed).send({from: address});
       // loadWeb3();
     }
-    await fetch(`${utils.API_PATH}/request`, {
-      method: 'DELETE',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id: request.id})
-    });
+    // await fetch(`${utils.API_PATH}/request`, {
+    //   method: 'DELETE',
+    //   headers: {'Content-Type': 'application/json'},
+    //   body: JSON.stringify({id: request.id})
+    // });
   }
 
   async function getRequests() {
-    // add temporary markers to events
     await fetch(`${utils.API_PATH}/request`)
     .then(data => data.json())
     .then(data => {
+      setRequests(data);
       data.forEach(async d => {
         let date = new Date(d.date);
         date.setMinutes(utils.REQUESTS_ADD_TIME);
@@ -73,13 +74,14 @@ function App() {
 
   useEffect(() => {
     loadWeb3();
+    getRequests();
     const interval = setInterval(getRequests, utils.REQUESTS_REFRESH_TIME);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
-    {events && <Map events={events} account={address} contract={contract}/>}
+    {events && <Map events={events} requests={requests} account={address} contract={contract}/>}
     </>
   );
 }

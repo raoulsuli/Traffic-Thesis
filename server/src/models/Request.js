@@ -2,12 +2,13 @@ const mongoose = require('mongoose');
 
 const schema = mongoose.Schema({
     address: String,
-    type: String,
+    eventType: String,
     longitude: Number,
     latitude: Number,
     date: Date,
     speed: Number,
     reputation: Number,
+    status: String,
     answered: [{address: String, answer: Boolean}]
 });
 

@@ -4,6 +4,11 @@ const Location = require('./models/Location');
 const Request = require('./models/Request');
 const utils = require('./constants/utils');
 
+router.get('/location', async (req, res) => {
+    const location = await Location.findOne({ address: req.body.address });
+    res.status(200).send(location || {});
+});
+
 router.post('/location', async (req, res) => {
     const location = await Location.findOne({ address: req.body.address });
     if (location) {
@@ -24,6 +29,16 @@ router.post('/location', async (req, res) => {
     }
 });
 
+router.put('/location', async (req, res) => {
+    const location = await Location.findOne({ address: req.body.address });
+    if (location) {
+        location.reputation = req.body.reputation;
+
+        await location.save();
+        res.status(200).send(location);
+    } else res.status(404).send('Wrong address');
+});
+
 router.get('/request', async (req, res) => {
     const requests = await Request.find();
     res.status(200).send(requests);
@@ -32,7 +47,7 @@ router.get('/request', async (req, res) => {
 router.post('/request', async (req, res) => {
     const location = await Location.findOne({ address: req.body.address });
     if (location) {
-        const requests = await Request.find({ type: req.body.type });
+        const requests = await Request.find({ eventType: req.body.type });
         let found = false;
         if (requests) {
             requests.forEach(r => {
@@ -44,17 +59,35 @@ router.post('/request', async (req, res) => {
         if (!found) {
             const request = new Request({
                 address: req.body.address,
-                type: req.body.type,
+                eventType: req.body.type,
                 longitude: req.body.longitude,
                 latitude: req.body.latitude,
                 date: req.body.date,
                 speed: req.body.speed,
                 reputation: location.reputation,
+                status: utils.PENDING,
                 answered: []
             });
             await request.save();
             res.status(200).send('OK!');
         }
+    }
+});
+
+router.put('/request', async (req, res) => {
+    const request = await Request.findOne({ id: req.body.id });
+    if (request) {
+        let change = false;
+        if (req.body.status) {
+            request.status = req.body.status;
+            change = true;
+        }
+        if (req.body.answered) {
+            request.answered.push(req.body.answered);
+            change = true;
+        }
+        if (change) await request.save();
+        res.status(200).send(request);
     }
 });
 

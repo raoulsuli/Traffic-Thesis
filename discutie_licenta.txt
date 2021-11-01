@@ -8,9 +8,8 @@ login - pagina, token middleware, token localstorage,
 intrebat match user cu adresa, 
 privacy necesar?)
 
-next-step: query catre participanti, adaugare la sfarsit, tinut cont de reputatie
-update reputatie, update web3 daca e adaugat ceva in blockchain
+dupa cele 5 minute: verific reputatie si answered. Daca e acceptat, adaug in blockchain, il fac accepted si updatez reputatie.
+Daca nu e acceptat, nu adaug, il fac refused si updatez reputatie.
 
-floating modal cu accept refuse SAAAU adaug pe harta dar nu in blockchain pentru 5 minute
-la sfarsitul celor 5 min, daca are reputatie mare si putine refuzuri se baga,
-daca are reputatie mica sau medie si are multe refuzuri bafta
+Reputatie mare cu >=raspunsuri pozitive accept
+Reputatie mica cu <raspunsuri pozitive refuz
