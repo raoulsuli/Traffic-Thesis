@@ -1,10 +1,5 @@
-verificare regulata event-uri sa vedem daca expira si astfel anulam event-ul cu un alt nod in blockchain ????
-
-viitor ->
-	blockchain live si metamask / metamask mobile
-	adresa blockchain cu gas pe live
-
-optional -> (drum optim A->B, viteza medie, aplicatie mobile
-login - pagina, token middleware, token localstorage,
-intrebat match user cu adresa, 
-privacy necesar?)
+retea descentralizata, live -- anuntat -> libp2p ganache metamask decentralized
+simultan mai multi useri -- test
+reputatie in blockchain -- add
+anulare event-uri
+(routing extra++)
