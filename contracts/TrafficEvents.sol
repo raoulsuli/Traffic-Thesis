@@ -32,4 +32,12 @@ contract TrafficEvents {
     speed = events[_id].speed;
     owner = events[_id].owner;
   }
+
+  function deleteEvent(uint _id) public {
+    for (uint i = _id; i < eventCount - 1; i++) {
+      events[i] = events[i + 1];
+    }
+    delete events[eventCount - 1];
+    eventCount--;
+  }
 }

@@ -1,5 +1,3 @@
-retea descentralizata, live -- anuntat -> libp2p ganache metamask decentralized
-simultan mai multi useri -- test
-reputatie in blockchain -- add
-anulare event-uri
-(routing extra++)
+hosting pentru a demonstra descentralizarea si pentru a arata ca merge cu mai multi useri (react, db, ganache)
+routing
+reputatie in blockchain

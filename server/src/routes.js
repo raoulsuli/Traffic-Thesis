@@ -21,7 +21,7 @@ router.post('/location', async (req, res) => {
             address: req.body.address,
             longitude: req.body.longitude,
             latitude: req.body.latitude,
-            reputation: 0.5
+            reputation: 5
         });
 
         await newLocation.save();
@@ -73,6 +73,7 @@ router.post('/request', async (req, res) => {
                 speed: req.body.speed,
                 reputation: location.reputation,
                 status: utils.PENDING,
+                already_in: false,
                 answered: []
             });
             await request.save();
@@ -94,6 +95,25 @@ router.put('/request', async (req, res) => {
             change = true;
         }
         if (change) await request.save();
+        res.status(200).send(request);
+    }
+});
+
+router.post('/deleteEvent', async (req, res) => {
+    const { address, eventType, longitude, latitude, date } = req.body;
+    const request = await Request
+    .findOne({ 
+        address: address.toLowerCase(),
+        eventType: eventType,
+        longitude: longitude,
+        latitude: latitude,
+        date: date
+    });
+    if (request) {
+        request.status = utils.PENDING;
+        request.answered = [];
+        request.already_in = true;
+        await request.save();
         res.status(200).send(request);
     }
 });

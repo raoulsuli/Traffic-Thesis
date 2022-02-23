@@ -13,6 +13,7 @@ function EventInfo(props) {
     function isHidden() {
         return props.event.reputation && !hidden &&
         props.event.answered.filter(o => o.address === props.account).length === 0 &&
+        // props.event.address !== props.account && // COMMENT PENTRU TESTE
         utils.getDistance(props.position.latitude, props.position.longitude, props.event.latitude, props.event.longitude) < 0.5;
     }
 

@@ -2,6 +2,7 @@ module.exports = {
     API_PATH: 'http://localhost:3200',
     REQUESTS_REFRESH_TIME: 15000,
     REQUESTS_ADD_TIME: 5,
+    EXPIRATION_HOURS: 1,
     PENDING: 'Pending',
     ACCEPTED: 'Accepted',
     REFUSED: 'Refused',

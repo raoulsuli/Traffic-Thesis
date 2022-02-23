@@ -10,7 +10,7 @@ function App() {
   const [contract, setContract] = useState(null);
   const [events, setEvents] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [queryGiven, setQueryGiven] = useState([]);
+  const transactions = [];
 
   async function loadWeb3() {
     try {
@@ -21,24 +21,32 @@ function App() {
       const contract = new window.web3.eth.Contract(TrafficEvents.abi, deployedNetwork && deployedNetwork.address);
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
       const eventCount = await contract.methods.eventCount().call();
       const events = [];
 
       for (let i = 0; i < eventCount; i++) {
         const ev = await contract.methods.getEvent(i).call();
-        events.push({
-          id: ev.id,
-          date: ev.date,
-          eventType: ev.eventType,
-          latitude: parseFloat(ev.latitude),
-          longitude: parseFloat(ev.longitude),
-          owner: ev.owner,
-          speed: ev.speed
-        });
+
+        let date = new Date(ev.date);
+        date = new Date(date.getTime() + utils.EXPIRATION_HOURS * 3600000);
+
+        if (new Date() >= date) deleteEvent(ev);
+        else {
+          events.push({
+            id: ev.id,
+            date: ev.date,
+            eventType: ev.eventType,
+            latitude: parseFloat(ev.latitude),
+            longitude: parseFloat(ev.longitude),
+            owner: ev.owner,
+            speed: ev.speed
+          });
+        }
       }
 
-      setAddress(accounts[0]);
       setContract(contract);
+      setAddress(accounts[0]);
       setEvents(events);
     } catch (error) {
       alert(
@@ -53,37 +61,61 @@ function App() {
       const accepts = request.answered.filter(r => r.answer === true);
       const refuses = request.answered.filter(r => r.answer === false);
       if (accepts.length > refuses.length) addToBlockchain(request);
-      else if (accepts.length === refuses.length && request.reputation >= 0.5) addToBlockchain(request);
+      else if (accepts.length === refuses.length && request.reputation >= 5) addToBlockchain(request);
       else updateDatabase(request, -1);
     }
   }
 
   async function addToBlockchain(request) {
-    if (!queryGiven.includes(request._id)) {
-      await contract.methods.createEvent(request.eventType, request.date, request.longitude.toString(), request.latitude.toString(), request.speed).send({from: request.address});
-      loadWeb3();
-      updateDatabase(request, 1);
+    if (!transactions.includes(request._id)) {
+      transactions.push(request._id);
+      await contract.methods
+      .createEvent(
+        request.eventType,
+        request.date,
+        request.longitude.toString(),
+        request.latitude.toString(),
+        request.speed)
+      .send({from: request.address})
+      .then(() => {
+        loadWeb3();
+        updateDatabase(request, 1);
+      })
+      .catch(() => updateDatabase(request, -1));
     }
-
-    setQueryGiven(query => {
-      if (!query.includes(request._id)) query.push(request._id);
-    });
   }
 
   async function updateDatabase(request, sign) {
     await fetch(`${utils.API_PATH}/location?address=${request.address.toString()}`)
     .then(data => data.json())
     .then(async data => {
-      await fetch(`${utils.API_PATH}/location`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({address: request.address, reputation: Math.min(data.reputation + 0.01 * sign, 100)})
-      });
+      if (!request.already_in) {
+        await fetch(`${utils.API_PATH}/location`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({address: request.address, reputation: Math.max(Math.min(data.reputation + sign, 10), 0)})
+        });
+      }
     });
     await fetch(`${utils.API_PATH}/request`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({id: request._id, status: sign === 1 ? utils.ACCEPTED : utils.REFUSED})
+    });
+  }
+
+  async function deleteEvent(event) {
+    contract && await contract.methods.deleteEvent(event.id).send({from: address}).catch(() => {});
+    await fetch(`${utils.API_PATH}/deleteEvent`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        address: event.owner,
+        longitude: event.longitude,
+        latitude: event.latitude,
+        eventType: event.eventType,
+        date: event.date
+      })
     });
   }
 
@@ -94,8 +126,10 @@ function App() {
       setRequests(data);
       data.forEach(async d => {
         let date = new Date(d.date);
-        date.setMinutes(utils.REQUESTS_ADD_TIME);
-        if (new Date() >= date && d.status === utils.PENDING && d.address === address) updateBlockchain(d);
+        date = new Date(date.getTime() + utils.REQUESTS_ADD_TIME * 60000);
+        if (new Date() >= date && d.status === utils.PENDING && d.address === address) {
+          updateBlockchain(d);
+        }
       });
     });
   }
@@ -103,9 +137,9 @@ function App() {
   useEffect(() => {
     loadWeb3();
     getRequests();
-    const interval = setInterval(getRequests, utils.REQUESTS_REFRESH_TIME);
+    const interval = setInterval(() => getRequests(), utils.REQUESTS_REFRESH_TIME);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

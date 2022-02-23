@@ -9,6 +9,7 @@ const schema = mongoose.Schema({
     speed: Number,
     reputation: Number,
     status: String,
+    already_in: Boolean,
     answered: [{address: String, answer: Boolean}]
 });
 

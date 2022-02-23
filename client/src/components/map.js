@@ -44,7 +44,7 @@ export default function Map(props) {
   }
 
   async function updateRequest(answer) {
-    await fetch(`${utils.API_PATH}/request`, { //TODO
+    await fetch(`${utils.API_PATH}/request`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -86,7 +86,7 @@ export default function Map(props) {
         </Popup>
       )}
 
-      <EventModal onClick={createEvent}/>
+      {position && <EventModal onClick={createEvent}/>}
     </ReactMapGL>
   </>
   );
