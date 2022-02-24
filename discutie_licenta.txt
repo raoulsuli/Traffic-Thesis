@@ -1,3 +1,8 @@
-hosting pentru a demonstra descentralizarea si pentru a arata ca merge cu mai multi useri (react, db, ganache)
-routing
-reputatie in blockchain
+- boti care raspund la request-uri random si care au culoare in functie de reputatie
+    + lastUpdateTime la location sa vedem care sunt activi
+
+- proof of stake + modificat consens
+
+-> 
+    un nou test la sfarsit aplicatie
+    update workflow doc

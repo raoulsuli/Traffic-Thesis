@@ -2,12 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Location = require('./models/Location');
 const Request = require('./models/Request');
+const AnswerHistory = require('./models/AnswerHistory');
 const utils = require('./constants/utils');
-
-router.get('/location', async (req, res) => {
-    const location = await Location.findOne({ address: req.query.address });
-    res.status(200).send(location || {});
-});
 
 router.post('/location', async (req, res) => {
     const location = await Location.findOne({ address: req.body.address });
@@ -32,7 +28,20 @@ router.post('/location', async (req, res) => {
 router.put('/location', async (req, res) => {
     const location = await Location.findOne({ address: req.body.address });
     if (location) {
-        location.reputation = req.body.reputation;
+        const answerHistory = await AnswerHistory.findOne({ address: req.body.address });
+        
+        const allAnswers = await AnswerHistory.find();
+        const totalAnswers = allAnswers.reduce((partial, curr) => partial + curr, 0);
+
+        let reputation = 0;
+        
+        if (answerHistory) {
+            reputation = answerHistory.answers / totalAnswers;
+        } else {
+            reputation = 1 / totalAnswers;
+        }
+        
+        location.reputation = reputation * req.body.reputation;
 
         await location.save();
         res.status(200).send(location);
@@ -58,7 +67,7 @@ router.post('/request', async (req, res) => {
             });
 
             requests.forEach(r => {
-                if (utils.getDistance(r.latitude, r.longitude, req.body.latitude, req.body.longitude) < 0.1) {
+                if (utils.getDistance(r.latitude, r.longitude, req.body.latitude, req.body.longitude) < 0.05) {
                     found = true;
                 }
             });
@@ -92,6 +101,16 @@ router.put('/request', async (req, res) => {
         }
         if (req.body.answered) {
             request.answered.push(req.body.answered);
+            const answerHistory = await AnswerHistory.findOne({ address: req.body.answered.address });
+            if (answerHistory) {
+                answerHistory.answers++;
+            } else {
+                answerHistory = new AnswerHistory({
+                    address: req.body.answered.address,
+                    answers: 1
+                });
+            }
+            await answerHistory.save();
             change = true;
         }
         if (change) await request.save();

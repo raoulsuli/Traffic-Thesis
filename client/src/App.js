@@ -31,7 +31,7 @@ function App() {
         let date = new Date(ev.date);
         date = new Date(date.getTime() + utils.EXPIRATION_HOURS * 3600000);
 
-        if (new Date() >= date) deleteEvent(ev);
+        if (new Date() >= date && ev.owner.toLowerCase() === address) deleteEvent(ev);
         else {
           events.push({
             id: ev.id,
@@ -60,13 +60,13 @@ function App() {
     if (contract) {
       const accepts = request.answered.filter(r => r.answer === true);
       const refuses = request.answered.filter(r => r.answer === false);
-      if (accepts.length > refuses.length) addToBlockchain(request);
-      else if (accepts.length === refuses.length && request.reputation >= 5) addToBlockchain(request);
+      if (accepts.length > refuses.length) addToBlockchain(request, 1);
+      else if (accepts.length === refuses.length && request.reputation >= 5) addToBlockchain(request, 0);
       else updateDatabase(request, -1);
     }
   }
 
-  async function addToBlockchain(request) {
+  async function addToBlockchain(request, reputation) {
     if (!transactions.includes(request._id)) {
       transactions.push(request._id);
       await contract.methods
@@ -79,47 +79,49 @@ function App() {
       .send({from: request.address})
       .then(() => {
         loadWeb3();
-        updateDatabase(request, 1);
+        updateDatabase(request, reputation);
       })
       .catch(() => updateDatabase(request, -1));
     }
   }
 
   async function updateDatabase(request, sign) {
-    await fetch(`${utils.API_PATH}/location?address=${request.address.toString()}`)
-    .then(data => data.json())
-    .then(async data => {
-      if (!request.already_in) {
-        await fetch(`${utils.API_PATH}/location`, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({address: request.address, reputation: Math.max(Math.min(data.reputation + sign, 10), 0)})
-        });
-      }
-    });
+    if (!request.already_in && sign !== 0) {
+      await fetch(`${utils.API_PATH}/location`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({address: request.address, reputation: sign})
+      });
+    }
+
     await fetch(`${utils.API_PATH}/request`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({id: request._id, status: sign === 1 ? utils.ACCEPTED : utils.REFUSED})
+      body: JSON.stringify({id: request._id, status: sign !== -1 ? utils.ACCEPTED : utils.REFUSED})
     });
   }
 
   async function deleteEvent(event) {
-    contract && await contract.methods.deleteEvent(event.id).send({from: address}).catch(() => {});
-    await fetch(`${utils.API_PATH}/deleteEvent`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        address: event.owner,
-        longitude: event.longitude,
-        latitude: event.latitude,
-        eventType: event.eventType,
-        date: event.date
-      })
-    });
+    contract && await contract.methods.deleteEvent(event.id)
+    .send({from: address})
+    .then(async () => {
+      await fetch(`${utils.API_PATH}/deleteEvent`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          address: event.owner,
+          longitude: event.longitude,
+          latitude: event.latitude,
+          eventType: event.eventType,
+          date: event.date
+        })
+      });
+    })
+    .catch(() => {});
   }
 
   async function getRequests() {
+    loadWeb3();
     await fetch(`${utils.API_PATH}/request`)
     .then(data => data.json())
     .then(data => {
@@ -135,7 +137,6 @@ function App() {
   }
 
   useEffect(() => {
-    loadWeb3();
     getRequests();
     const interval = setInterval(() => getRequests(), utils.REQUESTS_REFRESH_TIME);
     return () => clearInterval(interval);

@@ -13,7 +13,6 @@ function EventInfo(props) {
     function isHidden() {
         return props.event.reputation && !hidden &&
         props.event.answered.filter(o => o.address === props.account).length === 0 &&
-        // props.event.address !== props.account && // COMMENT PENTRU TESTE
         utils.getDistance(props.position.latitude, props.position.longitude, props.event.latitude, props.event.longitude) < 0.5;
     }
 
@@ -23,10 +22,10 @@ function EventInfo(props) {
                 <div className="col-12">Type: {props.event.eventType}</div>
             </div>
             <div className="row">
-                <div className="col-12">Date: {props.event.date}</div>
+                <div className="col-12">Date: {new Date(props.event.date).toLocaleString("uk-Uk")}</div>
             </div>
             <div className="row">
-                <div className="col-12">speed: {props.event.speed} km/h</div>
+                <div className="col-12">Speed: {props.event.speed} km/h</div>
             </div>
             {isHidden() && (
                 <div className="row mt-2">

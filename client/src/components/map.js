@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMapGL, { GeolocateControl, Popup } from 'react-map-gl';
 import EventInfo from './event-info';
 import Events from './events';
@@ -60,16 +60,17 @@ export default function Map(props) {
   return (
   <>
     <ReactMapGL
-    {...viewport}
-    mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
-    onViewportChange={(viewport) => setViewport(viewport)}
+      {...viewport}
+      mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
+      onViewportChange={(viewport) => setViewport(viewport)}
     >
       <GeolocateControl
-      style={{right: 10, top: 10}}
-      positionOptions={{enableHighAccuracy: true}}
-      trackUserLocation={true}
-      onGeolocate={(pos) => updatePosition(pos.coords)}
-      auto/>
+        style={{right: 10, top: 10}}
+        positionOptions={{enableHighAccuracy: true}}
+        trackUserLocation={true}
+        onGeolocate={(pos) => updatePosition(pos.coords)}
+        auto
+      />
 
       <Events events={props.events} requests={props.requests} onClick={setEventInfo}/>
       
