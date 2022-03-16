@@ -11,6 +11,7 @@ function App() {
   const [events, setEvents] = useState(null);
   const [requests, setRequests] = useState([]);
   const transactions = [];
+  const delete_transactions = [];
 
   async function loadWeb3() {
     try {
@@ -102,22 +103,25 @@ function App() {
   }
 
   async function deleteEvent(event) {
-    contract && await contract.methods.deleteEvent(event.id)
-    .send({from: address})
-    .then(async () => {
-      await fetch(`${utils.API_PATH}/deleteEvent`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          address: event.owner,
-          longitude: event.longitude,
-          latitude: event.latitude,
-          eventType: event.eventType,
-          date: event.date
-        })
-      });
-    })
-    .catch(() => {});
+    if (!delete_transactions.includes({ latitude: event.latitude, longitude: event.longitude })) {
+      delete_transactions.push({ latitude: event.latitude, longitude: event.longitude });
+      contract && await contract.methods.deleteEvent(event.id)
+      .send({from: address})
+      .then(async () => {
+        await fetch(`${utils.API_PATH}/deleteEvent`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            address: event.owner,
+            longitude: event.longitude,
+            latitude: event.latitude,
+            eventType: event.eventType,
+            date: event.date
+          })
+        });
+      })
+      .catch(() => {});
+    }
   }
 
   async function getRequests() {

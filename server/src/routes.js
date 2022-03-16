@@ -31,17 +31,17 @@ router.put('/location', async (req, res) => {
         const answerHistory = await AnswerHistory.findOne({ address: req.body.address });
         
         const allAnswers = await AnswerHistory.find();
-        const totalAnswers = allAnswers.reduce((partial, curr) => partial + curr, 0);
+        const totalAnswers = allAnswers.reduce((partial, curr) => partial + curr.answers, 0);
 
         let reputation = 0;
-        
+
         if (answerHistory) {
             reputation = answerHistory.answers / totalAnswers;
         } else {
             reputation = 1 / totalAnswers;
         }
         
-        location.reputation = reputation * req.body.reputation;
+        location.reputation += reputation * req.body.reputation;
 
         await location.save();
         res.status(200).send(location);
@@ -104,13 +104,14 @@ router.put('/request', async (req, res) => {
             const answerHistory = await AnswerHistory.findOne({ address: req.body.answered.address });
             if (answerHistory) {
                 answerHistory.answers++;
+                await answerHistory.save();
             } else {
-                answerHistory = new AnswerHistory({
+                answerHistoryNew = new AnswerHistory({
                     address: req.body.answered.address,
                     answers: 1
                 });
+                await answerHistoryNew.save();
             }
-            await answerHistory.save();
             change = true;
         }
         if (change) await request.save();
@@ -132,6 +133,7 @@ router.post('/deleteEvent', async (req, res) => {
         request.status = utils.PENDING;
         request.answered = [];
         request.already_in = true;
+        request.date = new Date();
         await request.save();
         res.status(200).send(request);
     }

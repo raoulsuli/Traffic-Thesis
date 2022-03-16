@@ -72,7 +72,7 @@ export default function Map(props) {
         auto
       />
 
-      <Events events={props.events} requests={props.requests} onClick={setEventInfo}/>
+      {position && <Events events={props.events} requests={props.requests} onClick={setEventInfo}/>}
       
       {eventInfo && (
         <Popup
