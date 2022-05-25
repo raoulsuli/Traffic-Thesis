@@ -1,8 +1,1 @@
-- boti care raspund la request-uri random si care au culoare in functie de reputatie
-    + lastUpdateTime la location sa vedem care sunt activi
-
-- proof of stake + modificat consens
-
--> 
-    un nou test la sfarsit aplicatie
-    update workflow doc
+-> boti care raspund la request-uri random si care au culoare in functie de reputatie *workflow update*

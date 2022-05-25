@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const schema = mongoose.Schema({
-    address: String,
-    answers: Number
+  address: String,
+  answers: Number,
 });
 
-module.exports = mongoose.model("ReputationHistory", schema);
+module.exports = mongoose.model("AnswerHistory", schema);
