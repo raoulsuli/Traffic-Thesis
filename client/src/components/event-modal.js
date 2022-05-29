@@ -27,10 +27,7 @@ export default function EventModal(props) {
     );
   }
 
-  useEffect(() => {
-    if (isHidden()) setBtnDisabled(true);
-    else setBtnDisabled(false);
-  }, []);
+  useEffect(() => setBtnDisabled(isHidden()), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -60,9 +57,11 @@ export default function EventModal(props) {
           </Form.Select>
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
-          <p className="pb-2 text-danger fw-bold">
-            An event is already happening in your area!
-          </p>
+          {isHidden() && (
+            <p className="pb-2 text-danger fw-bold">
+              An event is already happening in your area!
+            </p>
+          )}
           <Button
             className="w-50"
             variant="success"

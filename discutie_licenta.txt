@@ -1,1 +1,6 @@
--> boti care raspund la request-uri random si care au culoare in functie de reputatie *workflow update*
+- refactor
+
+- boti *workflow update*
+    -> mutat constanta in utils
+    -> raspund la cereri (odata la 10 secunde, daca sunt in zona)
+    -> activat dezactivat boti - buton

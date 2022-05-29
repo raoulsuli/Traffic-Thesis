@@ -118,16 +118,8 @@ function App() {
   }
 
   async function deleteEvent(event) {
-    if (
-      !delete_transactions.includes({
-        latitude: event.latitude,
-        longitude: event.longitude,
-      })
-    ) {
-      delete_transactions.push({
-        latitude: event.latitude,
-        longitude: event.longitude,
-      });
+    if (!delete_transactions.includes(event.id)) {
+      delete_transactions.push(event.id);
       contract &&
         (await contract.methods
           .deleteEvent(event.id)

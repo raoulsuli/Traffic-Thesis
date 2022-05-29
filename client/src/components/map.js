@@ -84,8 +84,11 @@ export default function Map(props) {
         {position && (
           <Events
             events={props.events}
+            position={position}
             requests={props.requests}
             onClick={setEventInfo}
+            refresh={props.refresh}
+            account={props.account}
           />
         )}
 
@@ -109,7 +112,7 @@ export default function Map(props) {
 
         {position && (
           <EventModal
-            events={props.events}
+            events={[...props.events, ...props.requests]}
             position={position}
             onClick={createEvent}
           />
