@@ -103,7 +103,10 @@ function App() {
       await fetch(`${utils.API_PATH}/location`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: request.address, reputation: sign }),
+        body: JSON.stringify({
+          address: request.address,
+          reputationCoeff: sign,
+        }),
       });
     }
 
@@ -132,7 +135,7 @@ function App() {
                 address: event.owner,
                 longitude: event.longitude,
                 latitude: event.latitude,
-                eventType: event.eventType,
+                type: event.eventType,
                 date: event.date,
               }),
             }).then(() => getRequests());
