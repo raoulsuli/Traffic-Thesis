@@ -24,7 +24,6 @@ router.post("/request", async (req, res) => {
   const { address, type, latitude, longitude, date, speed } = req.body;
 
   if (!address || !type || !latitude || !longitude || !date || speed === null) {
-    console.log(req.body);
     res.status(400).send("Wrong parameters.");
     return;
   }
@@ -120,7 +119,7 @@ router.put("/request", async (req, res) => {
     return;
   }
 
-  const request = await Request.findOne({ id: id });
+  const request = await Request.findOne({ _id: id });
 
   if (!request) {
     res.status(404).send("No request found.");
@@ -166,7 +165,7 @@ router.put("/request", async (req, res) => {
 router.delete("/request", async (req, res) => {
   const { id } = req.body;
 
-  await Request.deleteOne({ id: id });
+  await Request.deleteOne({ _id: id });
   res.status(200).send();
 });
 

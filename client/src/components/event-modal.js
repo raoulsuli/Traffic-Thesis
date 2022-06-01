@@ -32,10 +32,10 @@ export default function EventModal(props) {
   return (
     <>
       <Button
-        className="rounded-circle d-flex p-3"
+        className="rounded-circle p-3 text-white position-absolute"
         variant="info"
         onClick={() => setModal(true)}
-        style={{ position: "absolute", right: 30, bottom: 50, color: "white" }}
+        style={{ right: 30, bottom: 50 }}
       >
         <BsPlusLg size={40} />
       </Button>

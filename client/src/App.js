@@ -3,7 +3,16 @@ import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import TrafficEvents from "./contracts/TrafficEvents.json";
 import Map from "./components/map";
-import utils from "./constants/utils";
+import {
+  EXPIRATION_HOURS,
+  REPUTATION_ERROR_THRESHOLD,
+  httpRequest,
+  ACCEPTED,
+  REFUSED,
+  PENDING,
+  REQUESTS_ADD_TIME,
+  REQUESTS_REFRESH_TIME,
+} from "./constants/utils";
 
 function App() {
   const [address, setAddress] = useState("");
@@ -35,7 +44,7 @@ function App() {
         const ev = await contract.methods.getEvent(i).call();
 
         let date = new Date(ev.date);
-        date = new Date(date.getTime() + utils.EXPIRATION_HOURS * 3600000);
+        date = new Date(date.getTime() + EXPIRATION_HOURS * 3600000);
 
         if (new Date() >= date && ev.owner.toLowerCase() === address)
           deleteEvent(ev);
@@ -64,13 +73,15 @@ function App() {
   }
 
   async function updateBlockchain(request) {
-    if (contract) {
+    if (contract && !transactions.includes(request._id)) {
+      transactions.push(request._id);
+
       const accepts = request.answered.filter((r) => r.answer === true);
       const refuses = request.answered.filter((r) => r.answer === false);
       if (accepts.length >= request.answered.length / 2 + 1)
         addToBlockchain(request, 1);
       else if (
-        accepts.length >= refuses.length - utils.REPUTATION_ERROR_THRESHOLD &&
+        accepts.length >= refuses.length - REPUTATION_ERROR_THRESHOLD &&
         request.reputation >= 5
       ) {
         addToBlockchain(request, 0);
@@ -79,83 +90,69 @@ function App() {
   }
 
   async function addToBlockchain(request, reputation) {
-    if (!transactions.includes(request._id)) {
-      transactions.push(request._id);
-      await contract.methods
-        .createEvent(
-          request.eventType,
-          request.date,
-          request.longitude.toString(),
-          request.latitude.toString(),
-          request.speed
-        )
-        .send({ from: request.address })
-        .then(() => {
-          loadWeb3();
-          updateDatabase(request, reputation);
-        })
-        .catch(() => updateDatabase(request, -1));
-    }
+    await contract.methods
+      .createEvent(
+        request.eventType,
+        request.date,
+        request.longitude.toString(),
+        request.latitude.toString(),
+        request.speed
+      )
+      .send({ from: request.address })
+      .then(() => {
+        loadWeb3();
+        updateDatabase(request, reputation);
+      })
+      .catch(() => updateDatabase(request, -1));
   }
 
   async function updateDatabase(request, sign) {
     if (!request.already_in && sign !== 0) {
-      await fetch(`${utils.API_PATH}/location`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address: request.address,
-          reputationCoeff: sign,
-        }),
-      });
+      await httpRequest("/location", "PUT", {
+        address: request.address,
+        reputationCoeff: sign,
+      }).then(() => {});
     }
 
-    await fetch(`${utils.API_PATH}/request`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: request._id,
-        status: sign !== -1 ? utils.ACCEPTED : utils.REFUSED,
-      }),
-    });
+    await httpRequest("/request", "PUT", {
+      id: request._id,
+      status: sign !== -1 ? ACCEPTED : REFUSED,
+    }).then(() => {});
   }
 
   async function deleteEvent(event) {
     if (!delete_transactions.includes(event.id)) {
       delete_transactions.push(event.id);
-      contract &&
-        (await contract.methods
+      if (contract) {
+        await contract.methods
           .deleteEvent(event.id)
           .send({ from: address })
           .then(async () => {
-            await fetch(`${utils.API_PATH}/deleteEvent`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                address: event.owner,
-                longitude: event.longitude,
-                latitude: event.latitude,
-                type: event.eventType,
-                date: event.date,
-              }),
+            await httpRequest("/deleteEvent", "POST", {
+              address: event.owner,
+              longitude: event.longitude,
+              latitude: event.latitude,
+              type: event.eventType,
+              date: event.date,
             }).then(() => getRequests());
           })
-          .catch(() => {}));
+          .catch(() => {});
+      }
     }
   }
 
   async function getRequests() {
     loadWeb3();
-    await fetch(`${utils.API_PATH}/request`)
+    await httpRequest("/request")
       .then((data) => data.json())
       .then((data) => {
         setRequests(data);
         data.forEach(async (d) => {
           let date = new Date(d.date);
-          date = new Date(date.getTime() + utils.REQUESTS_ADD_TIME * 60000);
+          date = new Date(date.getTime() + REQUESTS_ADD_TIME * 60000);
           if (
             new Date() >= date &&
-            d.status === utils.PENDING &&
+            d.status === PENDING &&
             d.address === address
           ) {
             updateBlockchain(d);
@@ -166,10 +163,7 @@ function App() {
 
   useEffect(() => {
     getRequests();
-    const interval = setInterval(
-      () => getRequests(),
-      utils.REQUESTS_REFRESH_TIME
-    );
+    const interval = setInterval(() => getRequests(), REQUESTS_REFRESH_TIME);
     return () => clearInterval(interval);
   }, [address]); // eslint-disable-line react-hooks/exhaustive-deps
 

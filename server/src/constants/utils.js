@@ -4,10 +4,11 @@ const STATUS_CODES = {
   REFUSED: "Refused",
 };
 
-const includesStatusCode = (status) =>
-  Object.values(STATUS_CODES).includes(status);
+function includesStatusCode(status) {
+  return Object.values(STATUS_CODES).includes(status);
+}
 
-const objectHasKeys = (object, keys) => {
+function objectHasKeys(object, keys) {
   const objKeys = Object.keys(object);
 
   keys.forEach((k) => {
@@ -15,9 +16,9 @@ const objectHasKeys = (object, keys) => {
   });
 
   return true;
-};
+}
 
-const getDistance = (lat1, lon1, lat2, lon2) => {
+function getDistance(lat1, lon1, lat2, lon2) {
   var R = 6371;
   var dLat = deg2rad(lat2 - lat1);
   var dLon = deg2rad(lon2 - lon1);
@@ -30,11 +31,11 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var d = R * c;
   return d;
-};
+}
 
-const deg2rad = (deg) => {
+function deg2rad(deg) {
   return deg * (Math.PI / 180);
-};
+}
 
 module.exports = {
   STATUS_CODES,

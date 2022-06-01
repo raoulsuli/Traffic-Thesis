@@ -11,18 +11,22 @@ function EventInfo(props) {
   }
 
   function isHidden() {
-    return (
-      props.event.reputation &&
-      !hidden &&
-      props.event.answered.filter((o) => o.address === props.account).length ===
-        0 &&
-      getDistance(
-        props.position.latitude,
-        props.position.longitude,
-        props.event.latitude,
-        props.event.longitude
-      ) < 0.5
+    const distance = getDistance(
+      props.position.latitude,
+      props.position.longitude,
+      props.event.latitude,
+      props.event.longitude
     );
+
+    const isNotAnswered = !props.event.answered.some(
+      (o) => o.address === props.account
+    );
+
+    if (props.event.reputation && !hidden && isNotAnswered && distance < 0.5) {
+      return true;
+    }
+
+    return false;
   }
 
   return (

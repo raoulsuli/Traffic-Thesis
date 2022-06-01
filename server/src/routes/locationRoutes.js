@@ -64,6 +64,8 @@ router.put("/location", async (req, res) => {
   }
 
   location.reputation += reputation * reputationCoeff;
+  location.reputation = Math.max(0, location.reputation);
+  location.reputation = Math.min(10, location.reputation);
 
   await location.save();
   res.status(200).send();
