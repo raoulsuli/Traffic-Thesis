@@ -16,18 +16,21 @@ export default function EventModal(props) {
   }
 
   function isHidden() {
-    return props.events.some(
-      (ev) =>
-        getDistance(
-          props.position.latitude,
-          props.position.longitude,
-          ev.latitude,
-          ev.longitude
-        ) < 0.5
-    );
+    return props.events.some((ev) => {
+      const distance = getDistance(
+        props.position.latitude,
+        props.position.longitude,
+        ev.latitude,
+        ev.longitude
+      );
+
+      if (distance < 0.05) return true;
+      else if (distance < 0.5 && ev.eventType === eventType) return true;
+      return false;
+    });
   }
 
-  useEffect(() => setBtnDisabled(isHidden()), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setBtnDisabled(isHidden()), [props.events, eventType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -57,7 +60,7 @@ export default function EventModal(props) {
           </Form.Select>
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
-          {isHidden() && (
+          {btnDisabled && (
             <p className="pb-2 text-danger fw-bold">
               An event is already happening in your area!
             </p>

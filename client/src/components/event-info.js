@@ -18,9 +18,9 @@ function EventInfo(props) {
       props.event.longitude
     );
 
-    const isNotAnswered = !props.event.answered.some(
-      (o) => o.address === props.account
-    );
+    const isNotAnswered =
+      props.event.answered &&
+      !props.event.answered.some((o) => o.address === props.account);
 
     if (props.event.reputation && !hidden && isNotAnswered && distance < 0.5) {
       return true;
