@@ -62,7 +62,7 @@ export default function Map(props) {
     <>
       <ReactMapGL
         {...viewport}
-        mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNrdXFvdG1ocDE0YmUyb3FyZTJ3YnFvaWkifQ.ggE3-QrZyztX66PsodWWSA"
+        mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNsM3d6MDZhazAwZ2EzY3QyYjZvenlicXoifQ.56VONyOa_Py43pu6NP1dGg"
         onViewportChange={(viewport) => setViewport(viewport)}
       >
         <GeolocateControl
