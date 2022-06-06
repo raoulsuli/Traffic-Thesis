@@ -4,7 +4,7 @@ import Web3 from "web3";
 import TrafficEvents from "./contracts/TrafficEvents.json";
 import Map from "./components/map";
 import {
-  EXPIRATION_HOURS,
+  EXPIRATION_MINUTES,
   REPUTATION_ERROR_THRESHOLD,
   httpRequest,
   ACCEPTED,
@@ -44,7 +44,9 @@ function App() {
         const ev = await contract.methods.getEvent(i).call();
 
         let date = new Date(ev.date);
-        date = new Date(date.getTime() + EXPIRATION_HOURS * 3600000);
+        const expiration_time = EXPIRATION_MINUTES[ev.eventType] * 60000;
+
+        date = new Date(date.getTime() + expiration_time);
 
         if (new Date() >= date && ev.owner.toLowerCase() === address)
           deleteEvent(ev);
@@ -78,10 +80,25 @@ function App() {
 
       const accepts = request.answered.filter((r) => r.answer === true);
       const refuses = request.answered.filter((r) => r.answer === false);
-      if (accepts.length >= request.answered.length / 2 + 1)
-        addToBlockchain(request, 1);
+
+      const totalValue = request.answered.reduce(
+        (partial, curr) => partial + curr.reputation,
+        0
+      );
+
+      const acceptValue = accepts.reduce(
+        (partial, curr) => partial + curr.reputation,
+        0
+      );
+
+      const refuseValue = refuses.reduce(
+        (partial, curr) => partial + curr.reputation,
+        0
+      );
+
+      if (acceptValue >= totalValue / 2 + 1) addToBlockchain(request, 1);
       else if (
-        accepts.length >= refuses.length - REPUTATION_ERROR_THRESHOLD &&
+        acceptValue >= refuseValue - REPUTATION_ERROR_THRESHOLD &&
         request.reputation >= 5
       ) {
         addToBlockchain(request, 0);

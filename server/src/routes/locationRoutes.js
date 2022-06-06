@@ -54,14 +54,10 @@ router.put("/location", async (req, res) => {
   const allAnswers = await AnswerHistory.find();
   const totalAnswers = allAnswers.reduce(
     (partial, curr) => partial + curr.answers,
-    1
+    0
   );
 
-  let reputation = 1 / totalAnswers;
-
-  if (answerHistory) {
-    reputation *= answerHistory.answers;
-  }
+  const reputation = answerHistory.answers / Math.max(totalAnswers, 1);
 
   location.reputation += reputation * reputationCoeff;
   location.reputation = Math.max(0, location.reputation);

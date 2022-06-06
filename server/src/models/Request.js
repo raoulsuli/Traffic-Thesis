@@ -10,7 +10,7 @@ const schema = mongoose.Schema({
   reputation: Number,
   status: String,
   already_in: Boolean,
-  answered: [{ address: String, answer: Boolean }],
+  answered: [{ address: String, answer: Boolean, reputation: Number }],
 });
 
 module.exports = mongoose.model("Request", schema);

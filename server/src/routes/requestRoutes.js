@@ -113,7 +113,7 @@ router.put("/request", async (req, res) => {
 
   if (
     (status && !includesStatusCode(status)) ||
-    (answered && !objectHasKeys(answered, ["address", "answer"]))
+    (answered && !objectHasKeys(answered, ["address", "answer", "reputation"]))
   ) {
     res.status(400).send("Wrong parameters.");
     return;
@@ -136,7 +136,9 @@ router.put("/request", async (req, res) => {
       return;
     }
 
-    request.answered.push(answered);
+    const location = await Location.findOne({ address: answered.address });
+
+    request.answered.push({ ...answered, reputation: location.reputation });
 
     const answerHistory = await AnswerHistory.findOne({
       address: answered.address,
