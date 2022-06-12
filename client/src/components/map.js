@@ -1,129 +1,172 @@
-import React, { useEffect, useState } from "react";
-import ReactMapGL, { GeolocateControl, Popup } from "react-map-gl";
-import EventInfo from "./event-info";
-import Events from "./events/events";
-import EventModal from "./event-modal";
-import { httpRequest } from "../constants/utils";
-import Button from "react-bootstrap/Button";
+import { useState, useEffect } from "react";
+import ReactMapGL, { GeolocateControl } from "react-map-gl";
 
-export default function Map(props) {
+import { getRequests } from "../utils/http";
+import { Events } from "./Events";
+import { EventAdd } from "./EventAdd";
+import { EventPopup } from "./EventPopup";
+import {
+  EVENT_REFRESH_RATE,
+  STATUS_CODES,
+  deleteEvent,
+  updateBlockchain,
+} from "../utils/constants";
+import { Bots } from "./Bots";
+
+const EVENT_EXPIRE_RATES = {
+  Accident: 30 * 60 * 1000,
+  Police: 20 * 60 * 1000,
+  "Traffic Jam": 60 * 60 * 1000,
+  Construction: 120 * 60 * 1000,
+};
+
+const REQUEST_EXPIRE_RATE = 5 * 60 * 1000;
+
+export const Map = ({ address, contract }) => {
+  const [position, setPosition] = useState(null);
+  const [eventInfo, setEventInfo] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [events, setEvents] = useState([]);
+
   const [viewport, setViewport] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
 
-  const [eventInfo, setEventInfo] = useState(null);
-  const [position, setPosition] = useState(null);
-  const [botsActivated, setBotsActivated] = useState(false);
+  const resizeFunction = () => {
+    setViewport({ width: window.innerWidth, height: window.innerHeight });
+  };
+
+  const fetchRequests = () => {
+    getRequests().then((response) => {
+      let modified = false;
+
+      const pendingRequests = response.data.filter(
+        (req) => req.status === STATUS_CODES.PENDING
+      );
+
+      pendingRequests.forEach((request) => {
+        let date = new Date(request.date);
+        date = new Date(date.getTime() + REQUEST_EXPIRE_RATE);
+
+        if (new Date() >= date) {
+          modified = true;
+          updateBlockchain(request, contract, address);
+          setEventInfo(null);
+        }
+      });
+
+      if (modified) fetchData();
+      setRequests(pendingRequests);
+    });
+  };
+
+  const fetchEvents = async () => {
+    const eventCount = await contract.methods.eventCount().call();
+    const events = [];
+
+    for (let i = 0; i < eventCount; i++) {
+      const ev = await contract.methods.getEvent(i).call();
+      const { id, date, eventType, latitude, longitude, speed } = ev;
+
+      let newDate = new Date(date);
+      newDate = new Date(newDate.getTime() + EVENT_EXPIRE_RATES[ev.eventType]);
+
+      if (new Date() >= newDate) {
+        deleteEvent(ev, contract, address, fetchRequests);
+        setEventInfo(null);
+      } else {
+        events.push({
+          id: id,
+          date: date,
+          eventType: eventType,
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          speed: speed,
+        });
+      }
+    }
+
+    setEvents(events);
+  };
+
+  const fetchData = () => {
+    fetchRequests();
+    fetchEvents();
+  };
 
   useEffect(() => {
-    window.addEventListener("resize", () =>
-      setViewport({ width: window.innerWidth, height: window.innerHeight })
-    );
-    return () =>
-      window.removeEventListener("resize", () =>
-        setViewport({ width: window.innerWidth, height: window.innerHeight })
-      );
+    window.addEventListener("resize", resizeFunction);
+
+    return () => window.removeEventListener("resize", resizeFunction);
   }, []);
 
-  async function updatePosition(position) {
-    setPosition(position);
-    await httpRequest("/location", "POST", {
-      address: props.account,
-      longitude: position.longitude,
-      latitude: position.latitude,
-    }).then(() => {});
-  }
+  useEffect(() => {
+    fetchData();
 
-  async function createEvent(eventType) {
-    await httpRequest("/request", "POST", {
-      address: props.account,
-      longitude: position.longitude,
-      latitude: position.latitude,
-      type: eventType,
-      date: new Date(),
-      speed: position.speed * 3.6,
-    })
-      .then(() => props.refresh())
-      .catch(() => {});
-  }
-
-  async function updateRequest(answer) {
-    await httpRequest("/request", "PUT", {
-      id: answer.id,
-      answered: {
-        address: props.account,
-        answer: answer.answer,
-      },
-    }).then(() => {});
-  }
+    const interval = setInterval(() => fetchData(), EVENT_REFRESH_RATE);
+    return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <ReactMapGL
         {...viewport}
-        mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNsM3d6MDZhazAwZ2EzY3QyYjZvenlicXoifQ.56VONyOa_Py43pu6NP1dGg"
+        mapboxApiAccessToken="pk.eyJ1IjoicmFvdWxzdWxpIiwiYSI6ImNsNDczNXAxczBlaGUzbm1zaGh4cWk4dWQifQ.D7SId69HtWECO--dXdKoig"
         onViewportChange={(viewport) => setViewport(viewport)}
+        mapStyle="mapbox://styles/mapbox/streets-v9"
       >
         <GeolocateControl
+          auto
           style={{ right: 10, top: 10 }}
           positionOptions={{ enableHighAccuracy: true }}
           trackUserLocation={true}
-          onGeolocate={(pos) => updatePosition(pos.coords)}
-          auto
+          onGeolocate={(pos) => {
+            const { latitude, longitude, speed } = pos.coords;
+
+            setPosition({
+              latitude: latitude,
+              longitude: longitude,
+              speed: speed ?? 0,
+            });
+          }}
         />
 
         {position && (
           <Events
-            events={props.events}
-            position={position}
-            requests={props.requests}
-            onClick={setEventInfo}
-            refresh={props.refresh}
-            account={props.account}
-            botsActivated={botsActivated}
+            events={[...events, ...requests]}
+            setEventInfo={setEventInfo}
           />
         )}
 
         {eventInfo && (
-          <Popup
-            tipSize={5}
-            anchor="top"
-            longitude={eventInfo.longitude}
-            latitude={eventInfo.latitude}
-            closeButton={false}
-            onClose={setEventInfo}
-          >
-            <EventInfo
-              event={eventInfo}
-              position={position}
-              account={props.account}
-              onClick={updateRequest}
-            />
-          </Popup>
+          <EventPopup
+            position={position}
+            event={eventInfo}
+            address={address}
+            onClose={() => setEventInfo(null)}
+            refresh={fetchData}
+          />
         )}
 
-        <Button
-          variant="secondary"
-          className="text-white position-absolute"
-          onClick={() => setBotsActivated((prev) => !prev)}
-          style={{
-            left: 8,
-            bottom: 38,
-            fontSize: "12px",
-          }}
-        >
-          Activate/Deactivate Bots
-        </Button>
-
         {position && (
-          <EventModal
-            events={[...props.events, ...props.requests]}
+          <Bots
             position={position}
-            onClick={createEvent}
+            requests={requests}
+            events={events}
+            refresh={fetchData}
           />
         )}
       </ReactMapGL>
+
+      {position && (
+        <EventAdd
+          position={position}
+          events={[...events, ...requests]}
+          address={address}
+          refresh={fetchData}
+        />
+      )}
     </>
   );
-}
+};

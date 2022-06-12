@@ -7,7 +7,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+[class="mapboxgl-marker "] {
+  z-index: 0 !important;
+}
+
+[class="mapboxgl-popup mapboxgl-popup-anchor-top "] {
+  z-index: 1 !important;
 }

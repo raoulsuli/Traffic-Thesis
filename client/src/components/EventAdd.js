@@ -1,48 +1,54 @@
-import React, { useEffect, useState } from "react";
-import { BsPlusLg } from "react-icons/bs";
+import { useEffect, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import Modal from "react-bootstrap/Modal";
-import { getDistance } from "../constants/utils";
+import { BsPlusLg } from "react-icons/bs";
 
-export default function EventModal(props) {
-  const [modal, setModal] = useState(false);
+import { canAddEvent } from "../utils/constants";
+import { addRequest } from "../utils/http";
+
+export const EventAdd = ({ position, events, address, refresh }) => {
+  const [modalOpen, setModalOpen] = useState(false);
   const [eventType, setEventType] = useState("Traffic Jam");
   const [btnDisabled, setBtnDisabled] = useState(false);
 
-  function handleClick() {
-    props.onClick(eventType);
-    setModal(false);
-  }
+  const { latitude, longitude, speed } = position;
 
-  function isHidden() {
-    return props.events.some((ev) => {
-      const distance = getDistance(
-        props.position.latitude,
-        props.position.longitude,
-        ev.latitude,
-        ev.longitude
-      );
+  const isDisabled = () => {
+    return !canAddEvent(events, latitude, longitude, eventType);
+  };
 
-      if (distance < 0.05) return true;
-      else if (distance < 0.5 && ev.eventType === eventType) return true;
-      return false;
+  const addEvent = async () => {
+    await addRequest({
+      address: address,
+      eventType: eventType,
+      latitude: latitude,
+      longitude: longitude,
+      date: new Date(),
+      speed: speed * 3.6,
     });
-  }
 
-  useEffect(() => setBtnDisabled(isHidden()), [props.events, eventType]); // eslint-disable-line react-hooks/exhaustive-deps
+    setModalOpen(false);
+    refresh();
+  };
+
+  useEffect(() => setBtnDisabled(isDisabled()), [events, eventType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <Button
         className="rounded-circle p-3 text-white position-absolute"
         variant="info"
-        onClick={() => setModal(true)}
+        onClick={() => setModalOpen(true)}
         style={{ right: 30, bottom: 50 }}
       >
         <BsPlusLg size={40} />
       </Button>
-      <Modal show={modal} onHide={() => setModal(false)} animation="false">
+      <Modal
+        show={modalOpen}
+        onHide={() => setModalOpen(false)}
+        animation="false"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Add a new event</Modal.Title>
         </Modal.Header>
@@ -68,7 +74,7 @@ export default function EventModal(props) {
           <Button
             className="w-50"
             variant="success"
-            onClick={handleClick}
+            onClick={addEvent}
             disabled={btnDisabled}
           >
             Create
@@ -77,4 +83,4 @@ export default function EventModal(props) {
       </Modal>
     </>
   );
-}
+};

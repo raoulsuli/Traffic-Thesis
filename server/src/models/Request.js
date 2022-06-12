@@ -3,13 +3,13 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema({
   address: String,
   eventType: String,
-  longitude: Number,
   latitude: Number,
+  longitude: Number,
   date: Date,
   speed: Number,
-  reputation: Number,
   status: String,
-  already_in: Boolean,
+  reputation: Number,
+  alreadyIn: Boolean,
   answered: [{ address: String, answer: Boolean, reputation: Number }],
 });
 

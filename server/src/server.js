@@ -1,8 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const requestRoutes = require("./routes/requestRoutes");
-const locationRoutes = require("./routes/locationRoutes");
+const routes = require("./routes");
 
 mongoose
   .connect("mongodb://localhost:27017/traffic-thesis", {
@@ -14,7 +13,7 @@ mongoose
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
     app.use(cors());
-    app.use("/", [requestRoutes, locationRoutes]);
+    app.use("/", routes);
 
     app.listen(3200, () => {});
   });
