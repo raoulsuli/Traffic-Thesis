@@ -39,8 +39,6 @@ export const Map = ({ address, contract }) => {
 
   const fetchRequests = () => {
     getRequests().then((response) => {
-      let modified = false;
-
       const pendingRequests = response.data.filter(
         (req) => req.status === STATUS_CODES.PENDING
       );
@@ -50,13 +48,11 @@ export const Map = ({ address, contract }) => {
         date = new Date(date.getTime() + REQUEST_EXPIRE_RATE);
 
         if (new Date() >= date) {
-          modified = true;
           updateBlockchain(request, contract, address);
           setEventInfo(null);
         }
       });
 
-      if (modified) fetchData();
       setRequests(pendingRequests);
     });
   };

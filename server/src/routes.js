@@ -161,7 +161,7 @@ router.post("/addAnswer", async (req, res) => {
 router.post("/resetRequest", async (req, res) => {
   const { latitude, longitude } = req.body;
 
-  if (!latitude || !longitude || !date) {
+  if (!latitude || !longitude) {
     res.status(400).send("Wrong parameters.");
     return;
   }

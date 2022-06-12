@@ -139,7 +139,7 @@ const addToBlockchain = (request, reputation, contract, address) => {
   contract.methods
     .createEvent(
       eventType,
-      (new Date()).toString(),
+      new Date().toString(),
       longitude.toString(),
       latitude.toString(),
       speed

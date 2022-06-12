@@ -97,7 +97,7 @@ export const Bots = ({ position, requests, events, refresh }) => {
             id: _id,
             address: address,
             answer: Math.random() < 0.5,
-          }).then(() => refresh());
+          });
       });
     });
   };
