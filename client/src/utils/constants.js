@@ -13,7 +13,7 @@ const EVENT_COLORS = {
   Police: "blue",
   Accident: "red",
   "Traffic Jam": "orange",
-  Construction: "yellow",
+  Construction: "#009933",
 };
 
 const getDistance = (lat1, lon1, lat2, lon2) => {
